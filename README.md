@@ -1,92 +1,228 @@
-# RailSys — Railway Reservation System
 
-A college demo railway reservation web application built with **C++17**, the
-**Crow** HTTP framework, **SQLite**, CMake, and a vanilla HTML/CSS/JS frontend.
+# 🚆 RailSys — Railway Reservation System
 
-> **Honest disclaimer:** all trains, schedules, fares, seats and bookings are
-> **simulated demo data** stored in a local SQLite database. RailSys does *not*
-> fetch live Indian Railways data, and no real ticket can be booked.
+A full-stack railway reservation system built with **C++17, Crow, SQLite, HTML, CSS, and JavaScript**. RailSys provides train search, seat availability, ticket booking, PNR lookup, cancellation, and waitlist management through a responsive web interface and REST API.
 
-## Quick start
+> **Project status:** Working local prototype using demo train data. It does not connect to live Indian Railways systems.
 
-```bash
-# 1. Configure and build (already configured in build/ if present)
-cmake -S . -B build
-cmake --build build -j4
+## ✨ Features
 
-# 2. Run the server from the project root
-./build/railsys
+- 🔎 **Train Search** — Search for trains using journey details.
+- 💺 **Seat Availability** — Check available seats for a journey.
+- 🎫 **Ticket Booking** — Create reservations and generate PNRs.
+- 🔍 **PNR Lookup** — Retrieve booking details using a PNR.
+- ❌ **Ticket Cancellation** — Cancel an existing reservation.
+- ⏳ **Waitlist Management** — Automatically promote eligible waitlisted bookings when seats become available.
+- 🌐 **REST API** — HTTP endpoints for train search, availability, bookings, and cancellations.
+- 🗃️ **SQLite Database** — Persistent local storage for application data.
+- 📱 **Responsive Frontend** — HTML, CSS, and JavaScript interface.
+- 🧩 **Modular Architecture** — Separate models, repositories, services, routes, and database components.
+- 🧪 **Automated Tests** — Unit, API, and frontend smoke tests.
 
-# 3. Open the website
-#    http://127.0.0.1:18080
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|---|---|
+| Backend | C++17 |
+| HTTP Framework | Crow |
+| Database | SQLite |
+| Frontend | HTML5, CSS3, JavaScript |
+| Build System | CMake |
+| Testing | CTest, C++ tests, Python API tests, JavaScript smoke tests |
+| Version Control | Git and GitHub |
+
+## 🏗️ Architecture
+
+```text
+                   ┌─────────────────────┐
+                   │   Web Frontend      │
+                   │ HTML / CSS / JS     │
+                   └──────────┬──────────┘
+                              │ HTTP
+                   ┌──────────▼──────────┐
+                   │    Crow HTTP Server │
+                   │     REST API Routes │
+                   └──────────┬──────────┘
+                              │
+                   ┌──────────▼──────────┐
+                   │   Service Layer     │
+                   │ Booking / Availability
+                   └──────────┬──────────┘
+                              │
+                   ┌──────────▼──────────┐
+                   │ Repository Layer    │
+                   │ Data Access         │
+                   └──────────┬──────────┘
+                              │
+                   ┌──────────▼──────────┐
+                   │   SQLite Database   │
+                   └─────────────────────┘
 ```
 
-The first run creates `data/railsys.db` and seeds the demo schedule
-(6 trains across Wardha, Nagpur and Amravati; the next 10 days;
-Sleeper and AC 3 Tier). Existing bookings are never overwritten —
-seeding uses `INSERT OR IGNORE` only.
+### Project Structure
 
-## Tests
+```text
+RailSys/
+├── include/
+│   ├── app/             # Errors and validation
+│   ├── database/        # Database, statements, transactions
+│   ├── models/          # Train, booking, journey and availability
+│   ├── repositories/    # Database access layer
+│   ├── routes/          # API and static routes
+│   └── services/        # Booking and availability logic
+├── src/                 # C++ implementations and application entry point
+├── public/
+│   ├── index.html        # Web interface
+│   ├── style.css         # Styling
+│   └── app.js            # Frontend behavior
+├── sql/
+│   └── schema.sql        # Database schema
+├── tests/                # Automated tests
+├── third_party/
+│   └── Crow/             # Crow Git submodule
+├── CMakeLists.txt
+├── .gitmodules
+└── README.md
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Linux, Ubuntu, or WSL
+- A C++17-compatible compiler
+- CMake
+- Git
+- SQLite development libraries
+- Required dependencies for the Crow submodule
+
+### 1. Clone the Repository
 
 ```bash
-# C++ unit tests: seat allocation, waitlisting, FIFO promotion,
-# duplicate cancellation, validation  (61 checks)
+git clone --recurse-submodules https://github.com/hardik783-hub/RailSys.git
+cd RailSys
+```
+
+If you cloned the repository without its submodules, initialize Crow with:
+
+```bash
+git submodule update --init --recursive
+```
+
+### 2. Build the Project
+
+```bash
+cmake -S . -B build
+cmake --build build -j$(nproc)
+```
+
+### 3. Run RailSys
+
+```bash
+./build/railsys
+```
+
+Open the application in your browser:
+
+**http://127.0.0.1:18080/**
+
+Keep the terminal running while using the application.
+
+> If the build reports missing dependencies, install the packages required by your `CMakeLists.txt` and Crow configuration.
+
+## 🔌 REST API
+
+The backend exposes HTTP endpoints for the core reservation workflows.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Check server health |
+| `GET` | `/api/trains` | Retrieve train data |
+| `GET` | `/api/availability` | Check seat availability |
+| `GET` | `/api/search` | Search trains |
+| `GET` | `/api/meta` | Retrieve application metadata |
+| `POST` | `/api/bookings` | Create a booking |
+| `GET` | `/api/bookings/{PNR}` | Retrieve booking details |
+| `POST` | `/api/bookings/{PNR}/cancel` | Cancel a booking |
+
+### Example: Health Check
+
+```bash
+curl http://127.0.0.1:18080/api/health
+```
+
+### Example: Retrieve Trains
+
+```bash
+curl http://127.0.0.1:18080/api/trains
+```
+
+### Example: Check Availability
+
+```bash
+curl "http://127.0.0.1:18080/api/availability"
+```
+
+> **Note:** Query parameters, request bodies, and response schemas depend on the implemented route definitions. Consult `src/routes/ApiRoutes.cpp` for the exact contract before integrating another client.
+
+## 🧪 Testing
+
+Run the C++ test suite through CTest:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Run the C++ test executable directly:
+
+```bash
 ./build/railsys_tests
-# or: cd build && ctest --output-on-failure
+```
 
-# End-to-end API tests over HTTP. Spawns a *temporary* server with a
-# fresh isolated database, so it never touches data/railsys.db. (37 checks)
-python3 tests/e2e_api_test.py
+Run the frontend smoke tests:
 
-# Frontend smoke test. Runs the real public/app.js in Node with a DOM
-# shim and mocked API responses: boot, search, booking, confirmation,
-# PNR lookup, cancellation dialog, promotion notice. (37 checks)
+```bash
 node tests/frontend_smoke_test.js
 ```
 
-## Architecture
+Run the end-to-end API tests, if the Python test dependencies are installed:
 
-```
-src/
-  main.cpp                 # wiring only: database → repos → services → routes
-  app/AppError.h           # typed errors (400/404/409/500) via inheritance
-  database/                # Database, RAII Statement & Transaction
-  repositories/            # SQL only: Train, Journey, Booking (+ base Repository)
-  services/                # business logic: AvailabilityService, BookingService
-  routes/                  # HTTP layer: ApiRoutes, StaticRoutes
-include/                   # headers mirroring src/
-public/                    # frontend: index.html, style.css, app.js
-sql/schema.sql             # database schema reference
-tests/                     # C++ unit tests + Python e2e tests
+```bash
+python3 tests/e2e_api_test.py
 ```
 
-OOP concepts appear where they earn their place: encapsulation in the model
-classes, inheritance in `Repository` and the `AppError` hierarchy, and runtime
-polymorphism when routes catch `AppError` and map `virtual httpStatus()` to
-HTTP codes. Transactions use RAII (`BEGIN IMMEDIATE … COMMIT`, rollback in the
-destructor), and a process-wide mutex serializes database access.
+The end-to-end tests may start their own test server and use an isolated database. Follow any prerequisites documented in the test file.
 
-## HTTP API
+## 🔐 Data and Limitations
 
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| GET | `/api/health` | Health check |
-| GET | `/api/meta` | Stations, travel classes, train count |
-| GET | `/api/trains` | All demo trains |
-| GET | `/api/search?source=&destination=&journeyDate=&travelClass=` | Trains + availability + fare on a route (all filters optional except date) |
-| GET | `/api/availability?trainNumber=&journeyDate=&travelClass=` | One journey's availability |
-| POST | `/api/bookings` | Create booking `{trainNumber, journeyDate, travelClass, passengerName, passengerAge}` → 201 with PNR |
-| GET | `/api/bookings/{PNR}` | Booking details by PNR |
-| POST | `/api/bookings/{PNR}/cancel` | Cancel; promotes the earliest waitlisted booking (FIFO) |
+- RailSys is a local demonstration project and uses demo train data.
+- It does not provide live train schedules, live seat availability, real ticket issuance, or integration with official Indian Railways services.
+- SQLite stores application data locally.
+- Use test passenger information only.
+- Do not commit database files, credentials, or personal information.
 
-Errors return `{"error": "..."}` with 400 (invalid input), 404 (not found) or
-409 (already cancelled).
+## 🗺️ Future Improvements
 
-## Booking rules
+- Authentication and role-based access control
+- Improved journey planning and train filtering
+- Booking history and passenger profiles
+- Deployment using Docker
+- CI/CD pipeline with automated testing
+- Cloud deployment and monitoring
+- Integration with a legitimate live railway data provider, where access is available
 
-- Lowest free seat number is allotted; seat uniqueness is enforced by a
-  partial unique index on `passengers(seat_id)`.
-- Full coach → booking is **WAITLISTED** (no seat).
-- Cancelling a **CONFIRMED** booking frees the seat and promotes the
-  **earliest** waitlisted booking for that journey.
-- Cancelling twice returns `409`; cancelled bookings stay readable.
+## 👨‍💻 Author
+
+**Hardik Garg**
+
+- GitHub: [@hardik783-hub](https://github.com/hardik783-hub)
+
+## 📄 License
+
+Add a `LICENSE` file if you intend to distribute this project publicly. Ensure the selected license is compatible with all dependencies, including the Crow submodule.
+
+---
+
+<p align="center">
+  Built with C++ and a focus on clean architecture, reliable booking workflows, and practical backend engineering.
+</p>
