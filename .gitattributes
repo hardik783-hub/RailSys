@@ -1,0 +1,9 @@
+* text=auto
+*.cpp text eol=lf
+*.h text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.py text eol=lf
+*.sql text eol=lf
+*.txt text eol=lf

@@ -1,0 +1,20 @@
+# Build output
+/build/
+
+# Local SQLite database and backups
+/data/*.db
+/data/*.db-*
+/data/*.sqlite
+/data/*.sqlite3
+
+# Local development files
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+
+

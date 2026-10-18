@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RailSys - a demo railway reservation system built with C++17, Crow and SQLite.">
+    <title>RailSys · Railway Reservations</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E2A47'/%3E%3Cpath d='M9 21h14M10 17l2-8h8l2 8zm1 4-2 3m12-3 2 3M13 13h6' stroke='%234D8DF6' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- ============================ HEADER ============================ -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="#top" aria-label="RailSys home">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="3" width="14" height="14" rx="4"/>
+                        <path d="M5 11h14M9 7h6"/>
+                        <circle cx="9" cy="14" r="1"/>
+                        <circle cx="15" cy="14" r="1"/>
+                        <path d="m8 17-2 4M16 17l2 4"/>
+                    </svg>
+                </span>
+                <span class="brand-text">
+                    RailSys
+                    <small>RAILWAY RESERVATIONS</small>
+                </span>
+            </a>
+
+            <nav class="main-nav" id="main-nav" aria-label="Primary">
+                <a href="#search">Book a trip</a>
+                <a href="#manage">My booking</a>
+                <a href="#trains">Trains</a>
+            </nav>
+
+            <div class="header-actions">
+                <span class="status-pill" id="system-status" role="status">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-text">Checking system…</span>
+                </span>
+                <a class="btn btn-primary header-cta" href="#search">Book now</a>
+                <button class="nav-toggle" id="nav-toggle"
+                        aria-expanded="false" aria-controls="main-nav"
+                        aria-label="Toggle navigation menu">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        <!-- ============================ HERO ============================ -->
+        <section class="hero" id="top">
+            <div class="container hero-inner">
+                <div class="hero-copy">
+                    <p class="eyebrow">Demo reservation system</p>
+                    <h1>Reserve your next journey in&nbsp;<span class="hero-accent">under a minute.</span></h1>
+                    <p class="hero-sub">
+                        Search trains, check live seat availability from our
+                        demo database, book instantly, and manage your ticket
+                        with a PNR — all powered by a C++ and SQLite backend.
+                    </p>
+                    <ul class="hero-chips" aria-label="Highlights">
+                        <li>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+                            Instant PNR confirmation
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+                            Automatic waitlist promotion
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>
+                            Free cancellation
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="hero-stats" aria-label="System snapshot">
+                    <div class="stat-card">
+                        <span class="stat-value" id="stat-trains">–</span>
+                        <span class="stat-label">Demo trains</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="stat-stations">–</span>
+                        <span class="stat-label">Stations</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="stat-classes">–</span>
+                        <span class="stat-label">Travel classes</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">100%</span>
+                        <span class="stat-label">Simulated data</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-rails" aria-hidden="true"></div>
+        </section>
+
+        <!-- ============================ SEARCH ============================ -->
+        <section class="section search-section" id="search">
+            <div class="container">
+                <form id="search-form" class="search-card" novalidate>
+                    <div class="search-field">
+                        <label for="search-from">From</label>
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/></svg>
+                            <select id="search-from" name="from" required>
+                                <option value="">Any origin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="swap-btn" id="swap-stations"
+                            aria-label="Swap origin and destination">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16H3m0 0 3-3m-3 3 3 3M17 8h4m0 0-3-3m3 3-3 3"/></svg>
+                    </button>
+
+                    <div class="search-field">
+                        <label for="search-to">To</label>
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                            <select id="search-to" name="to">
+                                <option value="">Any destination</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="search-field">
+                        <label for="search-date">Journey date</label>
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4m8-4v4M3 10h18"/></svg>
+                            <input type="date" id="search-date" name="date" required>
+                        </div>
+                    </div>
+
+                    <div class="search-field">
+                        <label for="search-class">Travel class</label>
+                        <div class="input-icon">
+                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="13" rx="3"/><path d="M4 10h16M8 21l-2-2m10 2-2-2"/></svg>
+                            <select id="search-class" name="class">
+                                <option value="">Any class</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary search-submit" type="submit">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        Search trains
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================ RESULTS ============================ -->
+        <section class="section" id="results" hidden aria-live="polite">
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Search results</p>
+                        <h2>Trains on your route</h2>
+                    </div>
+                    <p class="results-summary" id="results-summary"></p>
+                </div>
+                <div id="results-list" class="results-list"></div>
+            </div>
+        </section>
+
+        <!-- ============================ BOOKING ============================ -->
+        <section class="section" id="booking" hidden>
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Step 2 · Reserve</p>
+                        <h2>Passenger details</h2>
+                    </div>
+                </div>
+
+                <div class="booking-grid">
+                    <!-- Journey summary + form -->
+                    <div class="panel" id="booking-panel">
+                        <div class="journey-summary" id="journey-summary"></div>
+
+                        <form id="booking-form" class="stack-form" novalidate>
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="passenger-name">Passenger name</label>
+                                    <input id="passenger-name" name="passengerName"
+                                           maxlength="80" autocomplete="name"
+                                           placeholder="Full name as on ID proof" required>
+                                    <p class="field-error" id="name-error" hidden></p>
+                                </div>
+                                <div class="field field-narrow">
+                                    <label for="passenger-age">Age</label>
+                                    <input id="passenger-age" name="passengerAge"
+                                           type="number" min="0" max="120"
+                                           inputmode="numeric"
+                                           placeholder="Years" required>
+                                    <p class="field-error" id="age-error" hidden></p>
+                                </div>
+                            </div>
+
+                            <div class="fare-row">
+                                <span>Total fare</span>
+                                <strong id="booking-fare">—</strong>
+                            </div>
+
+                            <button class="btn btn-primary btn-block" type="submit"
+                                    id="booking-submit">
+                                Confirm booking
+                            </button>
+                            <p class="form-note">
+                                Seats are allotted automatically. If the coach is
+                                full you will be placed on the waitlist and
+                                promoted automatically if a seat frees up.
+                            </p>
+                        </form>
+                    </div>
+
+                    <!-- Confirmation -->
+                    <div class="panel confirmation" id="confirmation-panel" hidden>
+                        <div class="confirm-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                        </div>
+                        <h3 id="confirm-title">Booking confirmed</h3>
+                        <p class="confirm-sub" id="confirm-sub"></p>
+
+                        <div class="pnr-block">
+                            <span class="pnr-label">PNR</span>
+                            <span class="pnr-value" id="confirm-pnr">—</span>
+                            <button type="button" class="btn btn-ghost btn-small"
+                                    id="copy-pnr">Copy</button>
+                        </div>
+
+                        <dl class="detail-grid" id="confirm-details"></dl>
+
+                        <div class="confirm-actions">
+                            <button class="btn btn-secondary" id="manage-new-pnr" type="button">
+                                Manage this booking
+                            </button>
+                            <button class="btn btn-ghost" id="book-another" type="button">
+                                Book another train
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================ MANAGE ============================ -->
+        <section class="section section-alt" id="manage">
+            <div class="container narrow">
+                <div class="section-head center">
+                    <div>
+                        <p class="eyebrow">Step 3 · Manage</p>
+                        <h2>PNR lookup &amp; cancellation</h2>
+                        <p class="section-sub">
+                            Enter the PNR from your booking confirmation to view
+                            its status or cancel it.
+                        </p>
+                    </div>
+                </div>
+
+                <form id="lookup-form" class="lookup-form" novalidate>
+                    <label class="visually-hidden" for="lookup-pnr">Booking PNR</label>
+                    <input id="lookup-pnr" placeholder="e.g. RS384B3B9B"
+                           maxlength="10" autocomplete="off" spellcheck="false"
+                           required>
+                    <button class="btn btn-primary" type="submit">Find booking</button>
+                </form>
+
+                <div id="lookup-result" hidden></div>
+            </div>
+        </section>
+
+        <!-- ============================ TRAINS ============================ -->
+        <section class="section" id="trains">
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Demo inventory</p>
+                        <h2>Train directory</h2>
+                    </div>
+                    <button id="refresh-trains" class="btn btn-ghost btn-small"
+                            type="button">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+                        Refresh
+                    </button>
+                </div>
+                <div id="train-list" class="train-grid" aria-busy="true"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================ FOOTER ============================ -->
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-brand">
+                <span class="brand-mark small" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="3" width="14" height="14" rx="4"/>
+                        <path d="M5 11h14M9 7h6"/>
+                        <path d="m8 17-2 4M16 17l2 4"/>
+                    </svg>
+                </span>
+                <div>
+                    <strong>RailSys</strong>
+                    <p>Railway reservation management system</p>
+                </div>
+            </div>
+
+            <div class="footer-links">
+                <a href="#search">Book a trip</a>
+                <a href="#manage">Manage booking</a>
+                <a href="#trains">Trains</a>
+                <a href="/api/health">API health</a>
+            </div>
+
+            <p class="footer-disclaimer">
+                <strong>Honest disclaimer:</strong> RailSys is a college demo
+                project. All trains, stations, schedules, fares, seats and
+                bookings are simulated data stored in a local SQLite database.
+                This site does <em>not</em> fetch live Indian Railways data and
+                no real ticket can be booked here.
+            </p>
+
+            <p class="footer-stack">
+                Built with C++17 · Crow · SQLite · vanilla JS
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================ CANCEL DIALOG ============================ -->
+    <dialog id="cancel-dialog" class="dialog" aria-labelledby="cancel-dialog-title">
+        <form method="dialog" class="dialog-inner">
+            <h3 id="cancel-dialog-title">Cancel this booking?</h3>
+            <p id="cancel-dialog-text">
+                This will cancel the reservation permanently. If any passenger
+                is waiting, they will be promoted automatically.
+            </p>
+            <div class="dialog-actions">
+                <button class="btn btn-ghost" value="keep" type="submit">
+                    Keep booking
+                </button>
+                <button class="btn btn-danger" value="cancel" type="submit"
+                        id="confirm-cancel-btn">
+                    Yes, cancel booking
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+</body>
+</html>
